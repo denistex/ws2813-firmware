@@ -1,24 +1,27 @@
+#include <avr/eeprom.h> 
 #include <avr/interrupt.h>
 #include <stdlib.h>
 #include <util/delay.h>
 
 #define ISS_DELAY 100
-//#define ISS_DELAY 200
 
-const unsigned char BIT0 = 0x0F;
-const unsigned char BIT1 = 0x26;
+#define BZ 0x0F
+#define B1 0x26
 
-#define BIT_MAX 0x07
-unsigned char g_bit = _BV(BIT_MAX);
-
-unsigned char g_buffer = 0x96;
+#define RGBLEN 24
+unsigned char g_index = 0;
+unsigned char g_rgb[] = {
+	B1, BZ, BZ, B1, BZ, B1, B1, BZ,
+	B1, B1, BZ, BZ, B1, BZ, B1, BZ,
+	B1, B1, B1, B1, BZ, BZ, BZ, BZ
+};
 
 void next_bit (void) {
-	if (g_bit == 0) {
+	if (g_index == RGBLEN) {
 		TCCR1 = _BV(CTC1) | _BV(PWM1A) | _BV(COM1A1);
 	} else {
-		OCR1A = g_buffer & g_bit ? BIT1 : BIT0;
-		g_bit >>= 1;
+		OCR1A = g_rgb[g_index];
+		g_index++;
 	}
 }
 
@@ -27,17 +30,18 @@ ISR (TIMER1_COMPA_vect) {
 }
 
 void init_pll (void) {
-	PORTB = _BV(PORTB2);
+	PORTB |= _BV(PORTB2);
 
 	_delay_us(ISS_DELAY);
 	while (PLLCSR & _BV(PLOCK)) {}
 	PLLCSR |= _BV(PCKE);
 
-	PORTB = 0;
+	PORTB &= ~_BV(PORTB2);
 }
 
 void init (void) {
 	DDRB = _BV(DDB2) | _BV(DDB1);
+	PORTB = 0;
 
 	init_pll();
 
@@ -52,14 +56,39 @@ void init (void) {
 	sei();
 }
 
+void read_next_rgb (void) {
+	static void* eeprom_ptr = 0;
+
+	const unsigned char byte = 8;
+	const unsigned char len = RGBLEN / byte;
+	unsigned char buffer[len];
+
+	eeprom_busy_wait();
+	eeprom_read_block(buffer, eeprom_ptr, len);
+	eeprom_ptr += len;
+
+	// testing code
+	buffer[0] = 0xF0;
+	buffer[1] = 0xCA;
+	buffer[2] = 0x96;
+	// testing code
+
+	for (unsigned char i = 0; i < len; ++i) {
+		const unsigned char value = buffer[i];
+		for (signed char j = byte - 1; j >= 0; --j) {
+			const unsigned char index = i * byte + byte - j - 1;
+			g_rgb[index] = value & _BV(j) ? B1 : BZ;
+		}
+	}
+}
+
 int main (void) {
 	init();
 	while (1) {
 		if ((TCCR1 & _BV(CS10)) == 0) {
-			PORTB |= _BV(PORTB2);
-			g_bit = _BV(BIT_MAX);
-			g_buffer = 0xCA;
+			read_next_rgb();
 
+			g_index = 0;
 			next_bit();
 			TCCR1 = _BV(CTC1) | _BV(PWM1A) | _BV(COM1A1) | _BV(CS10);
 		}
