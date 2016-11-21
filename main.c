@@ -2,42 +2,66 @@
 #include <stdlib.h>
 #include <util/delay.h>
 
-const uint8_t BIT0 = 0x0F;
-const uint8_t BIT1 = 0x26;
+#define ISS_DELAY 100
+//#define ISS_DELAY 200
 
-const uint8_t BIT_MAX = 0x0F;
+const unsigned char BIT0 = 0x0F;
+const unsigned char BIT1 = 0x26;
 
-uint16_t g_buffer = 0x96CA;
+#define BIT_MAX 0x07
+unsigned char g_bit = _BV(BIT_MAX);
+
+unsigned char g_buffer = 0x96;
 
 void next_bit (void) {
-	OCR1A = g_buffer & _BV(BIT_MAX) ? BIT1 : BIT0;
-	g_buffer <<= 1;
+	if (g_bit == 0) {
+		TCCR1 = _BV(CTC1) | _BV(PWM1A) | _BV(COM1A1);
+	} else {
+		OCR1A = g_buffer & g_bit ? BIT1 : BIT0;
+		g_bit >>= 1;
+	}
 }
 
 ISR (TIMER1_COMPA_vect) {
 	next_bit();
 }
 
-void configure (void) {
-	DDRB = _BV(DDB1);
-	PORTB = 0;
+void init_pll (void) {
+	PORTB = _BV(PORTB2);
 
-	_delay_us(100);
+	_delay_us(ISS_DELAY);
 	while (PLLCSR & _BV(PLOCK)) {}
 	PLLCSR |= _BV(PCKE);
+
+	PORTB = 0;
+}
+
+void init (void) {
+	DDRB = _BV(DDB2) | _BV(DDB1);
+
+	init_pll();
 
 	TCNT1 = 0;
 	OCR1C = 0x4F;
 
-	next_bit();
-
 	TIMSK = _BV(OCIE1A);
+
+	next_bit();
 	TCCR1 = _BV(CTC1) | _BV(PWM1A) | _BV(COM1A1) | _BV(CS10);
 
 	sei();
 }
 
 int main (void) {
-	configure();
-	while (1) {}
+	init();
+	while (1) {
+		if ((TCCR1 & _BV(CS10)) == 0) {
+			PORTB |= _BV(PORTB2);
+			g_bit = _BV(BIT_MAX);
+			g_buffer = 0xCA;
+
+			next_bit();
+			TCCR1 = _BV(CTC1) | _BV(PWM1A) | _BV(COM1A1) | _BV(CS10);
+		}
+	}
 }
