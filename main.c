@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <util/delay.h>
 
-#define ISS_DELAY 100
-
 #define BZ 0x0F
 #define B1 0x26
 
@@ -30,10 +28,15 @@ ISR (TIMER1_COMPA_vect) {
 }
 
 void init_pll (void) {
+	static const uint8_t PLL_DELAY = 100;
+
 	PORTB |= _BV(PORTB2);
 
-	_delay_us(ISS_DELAY);
-	while (PLLCSR & _BV(PLOCK)) {}
+	_delay_us(PLL_DELAY);
+
+	// WARNING: isis proteus hungs here, comment out before simulation
+	while (!(PLLCSR & _BV(PLOCK))) {}
+
 	PLLCSR |= _BV(PCKE);
 
 	PORTB &= ~_BV(PORTB2);

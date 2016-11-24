@@ -40,7 +40,7 @@ ISR (TIMER1_COMPA_vect) {
 }
 
 void init_pll (void) {
-	const uint8_t PLL_DELAY = 100;
+	static const uint8_t PLL_DELAY = 100;
 
 	PORTB |= _BV(PORTB4);
 

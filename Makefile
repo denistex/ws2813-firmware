@@ -40,7 +40,7 @@
 
 
 # MCU name
-MCU = attiny25
+MCU = attiny85
 
 
 # Processor frequency.
@@ -48,7 +48,7 @@ MCU = attiny25
 #     processor frequency. You can then use this symbol in your source code to
 #     calculate timings. Do NOT tack on a 'UL' at the end, this will be done
 #     automatically to create a 32-bit value in your source code.
-F_CPU = 64000000
+F_CPU = 16000000
 
 
 # Output format. (can be srec, ihex, binary)
