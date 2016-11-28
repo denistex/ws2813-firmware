@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <util/delay.h>
 
-#define BZ 0x0F
-#define B1 0x26
+#define BZ 0x10
+#define B1 0x27
 
 #define RGBLEN 24
 unsigned char g_index = 0;
@@ -49,7 +49,7 @@ void init (void) {
 	init_pll();
 
 	TCNT1 = 0;
-	OCR1C = 0x4F;
+	OCR1C = 0x50;
 
 	TIMSK = _BV(OCIE1A);
 
