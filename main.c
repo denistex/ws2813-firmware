@@ -1,99 +1,137 @@
-#include <avr/eeprom.h> 
+#include <avr/eeprom.h>
 #include <avr/interrupt.h>
-#include <stdlib.h>
 #include <util/delay.h>
 
-#define BZ 0x10
-#define B1 0x27
+#define ZERO_BIT_DELAY asm volatile("nop\n\tnop\n\t")
 
-#define RGBLEN 24
-unsigned char g_index = 0;
-unsigned char g_rgb[] = {
-	B1, BZ, BZ, B1, BZ, B1, B1, BZ,
-	B1, B1, BZ, BZ, B1, BZ, B1, BZ,
-	B1, B1, B1, B1, BZ, BZ, BZ, BZ
-};
+void _flash (const uint16_t count) {
+	PORTB |= _BV(PORTB3);
+	_delay_ms(3000);
+	PORTB &= ~_BV(PORTB3);
+	_delay_ms(2000);
 
-void next_bit (void) {
-	if (g_index == RGBLEN) {
-		TCCR1 = _BV(CTC1) | _BV(PWM1A) | _BV(COM1A1);
+	for (uint16_t i = 0; i < count; ++i) {
+		PORTB |= _BV(PORTB3);
+		_delay_ms(10);
+		PORTB &= ~_BV(PORTB3);
+		_delay_ms(1000);
+	}
+
+	PORTB |= _BV(PORTB3);
+	_delay_ms(3000);
+	PORTB &= ~_BV(PORTB3);
+	_delay_ms(2000);
+
+}
+
+uint16_t read (const uint16_t* const ptr) {
+	eeprom_busy_wait();
+	return eeprom_read_word(ptr);
+}
+
+inline void send (const uint16_t value) {
+	if (value == 0) {
+		asm volatile(
+			"sbi %0, 1\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"cbi %0, 1\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			:: "I" _SFR_IO_ADDR(PORTB));
 	} else {
-		OCR1A = g_rgb[g_index];
-		g_index++;
+		asm volatile(
+			"sbi %0, 1\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"cbi %0, 1\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			:: "I" _SFR_IO_ADDR(PORTB));
 	}
 }
 
-ISR (TIMER1_COMPA_vect) {
-	next_bit();
-}
-
-void init_pll (void) {
-	static const uint8_t PLL_DELAY = 100;
-
-	PORTB |= _BV(PORTB2);
-
-	_delay_us(PLL_DELAY);
-
-	// WARNING: isis proteus hungs here, comment out before simulation
-	while (!(PLLCSR & _BV(PLOCK))) {}
-
-	PLLCSR |= _BV(PCKE);
-
-	PORTB &= ~_BV(PORTB2);
+void commit (void) {
+	_delay_ms(100);
 }
 
 void init (void) {
-	DDRB = _BV(DDB2) | _BV(DDB1);
+	DDRB = _BV(DDB1) | _BV(DDB3);
 	PORTB = 0;
-
-	init_pll();
-
-	TCNT1 = 0;
-	OCR1C = 0x50;
-
-	TIMSK = _BV(OCIE1A);
-
-	next_bit();
-	TCCR1 = _BV(CTC1) | _BV(PWM1A) | _BV(COM1A1) | _BV(CS10);
-
 	sei();
-}
-
-void read_next_rgb (void) {
-	static void* eeprom_ptr = 0;
-
-	const unsigned char byte = 8;
-	const unsigned char len = RGBLEN / byte;
-	unsigned char buffer[len];
-
-	eeprom_busy_wait();
-	eeprom_read_block(buffer, eeprom_ptr, len);
-	eeprom_ptr += len;
-
-	// testing code
-	buffer[0] = 0xF0;
-	buffer[1] = 0xCA;
-	buffer[2] = 0x96;
-	// testing code
-
-	for (unsigned char i = 0; i < len; ++i) {
-		const unsigned char value = buffer[i];
-		for (signed char j = byte - 1; j >= 0; --j) {
-			const unsigned char index = i * byte + byte - j - 1;
-			g_rgb[index] = value & _BV(j) ? B1 : BZ;
-		}
-	}
 }
 
 int main (void) {
 	init();
-	while (1) {
-		if ((TCCR1 & _BV(CS10)) == 0) {
-			read_next_rgb();
 
-			g_index = 0;
-			next_bit();
-			TCCR1 = _BV(CTC1) | _BV(PWM1A) | _BV(COM1A1) | _BV(CS10);
+	const uint16_t cmdlen = 1;
+	const uint16_t cmdcount = read((uint16_t*)0);
+	const uint16_t* const first = (uint16_t*)2;
+	const uint16_t* const last = first + cmdcount * cmdlen;
+
+	const uint16_t* ptr = first;
+
+	while (1) {
+		if (ptr == last) {
+			ptr = first;
+			commit();
+			continue;
 		}
+
+		const uint16_t data = read(ptr);
+		ptr += cmdlen;
+
+		if (data & _BV(0)) {
+			commit();
+			const uint16_t cycles = data >> 1;
+			for (uint16_t i = 0; i < cycles; ++i) _delay_ms(100);
+			continue;
+		}
+
+		send(data & _BV(15));
+		send(data & _BV(14));
+		send(data & _BV(13));
+		send(data & _BV(12));
+		send(data & _BV(11));
+		send(0);
+		ZERO_BIT_DELAY; send(0);
+		ZERO_BIT_DELAY; send(0);
+
+		send(data & _BV(10));
+		send(data & _BV(9));
+		send(data & _BV(8));
+		send(data & _BV(7));
+		send(data & _BV(6));
+		send(0);
+		ZERO_BIT_DELAY; send(0);
+		ZERO_BIT_DELAY; send(0);
+
+		send(data & _BV(5));
+		send(data & _BV(4));
+		send(data & _BV(3));
+		send(data & _BV(2));
+		send(data & _BV(1));
+		send(0);
+		ZERO_BIT_DELAY; send(0);
+		ZERO_BIT_DELAY; send(0);
 	}
 }
