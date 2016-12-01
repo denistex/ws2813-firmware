@@ -4,24 +4,30 @@
 
 #define ZERO_BIT_DELAY asm volatile("nop\n\tnop\n\t")
 
-void _flash (const uint16_t count) {
-	PORTB |= _BV(PORTB3);
-	_delay_ms(3000);
-	PORTB &= ~_BV(PORTB3);
-	_delay_ms(2000);
-
+void _flash1 (const uint16_t count) {
 	for (uint16_t i = 0; i < count; ++i) {
 		PORTB |= _BV(PORTB3);
-		_delay_ms(10);
+		_delay_ms(5);
 		PORTB &= ~_BV(PORTB3);
-		_delay_ms(1000);
+		_delay_ms(995);
 	}
+}
 
+void _flash2 (const uint16_t count) {
+	for (uint16_t i = 0; i < count; ++i) {
+		PORTB |= _BV(PORTB3);
+		_delay_ms(50);
+		PORTB &= ~_BV(PORTB3);
+		_delay_ms(950);
+	}
+}
+
+void ledon (void) {
 	PORTB |= _BV(PORTB3);
-	_delay_ms(3000);
-	PORTB &= ~_BV(PORTB3);
-	_delay_ms(2000);
+}
 
+void ledoff (void) {
+	PORTB &= ~_BV(PORTB3);
 }
 
 uint16_t read (const uint16_t* const ptr) {
@@ -70,10 +76,6 @@ inline void send (const uint16_t value) {
 	}
 }
 
-void commit (void) {
-	_delay_ms(100);
-}
-
 void init (void) {
 	DDRB = _BV(DDB1) | _BV(DDB3);
 	PORTB = 0;
@@ -83,55 +85,58 @@ void init (void) {
 int main (void) {
 	init();
 
-	const uint16_t cmdlen = 1;
-	const uint16_t cmdcount = read((uint16_t*)0);
-	const uint16_t* const first = (uint16_t*)2;
-	const uint16_t* const last = first + cmdcount * cmdlen;
+	const uint16_t* ptr = 0;
 
-	const uint16_t* ptr = first;
-
+	uint8_t repeat = 0;
 	while (1) {
-		if (ptr == last) {
-			ptr = first;
-			commit();
-			continue;
-		}
-
 		const uint16_t data = read(ptr);
-		ptr += cmdlen;
+		if (repeat == 0) {
+			ptr++;
+		} else {
+			repeat--;
+		}
 
 		if (data & _BV(0)) {
-			commit();
-			const uint16_t cycles = data >> 1;
-			for (uint16_t i = 0; i < cycles; ++i) _delay_ms(100);
-			continue;
+			if (data & _BV(1)) {
+				const uint16_t command = data >> 2;
+
+				if (command == 0) {
+					ptr = 0;
+					ledon();
+					_delay_us(100); // commit delay
+					ledoff();
+				}
+			} else {
+				const uint16_t delay = data >> 2;
+				for (uint16_t i = 0; i < delay; ++i) _delay_ms(1);
+			}
+		} else {
+			send(data & _BV(15));
+			send(data & _BV(14));
+			send(data & _BV(13));
+			send(data & _BV(12));
+			send(data & _BV(11));
+			send(0);
+			ZERO_BIT_DELAY; send(0);
+			ZERO_BIT_DELAY; send(0);
+
+			send(data & _BV(10));
+			send(data & _BV(9));
+			send(data & _BV(8));
+			send(data & _BV(7));
+			send(data & _BV(6));
+			send(0);
+			ZERO_BIT_DELAY; send(0);
+			ZERO_BIT_DELAY; send(0);
+
+			send(data & _BV(5));
+			send(data & _BV(4));
+			send(data & _BV(3));
+			send(data & _BV(2));
+			send(data & _BV(1));
+			send(0);
+			ZERO_BIT_DELAY; send(0);
+			ZERO_BIT_DELAY; send(0);
 		}
-
-		send(data & _BV(15));
-		send(data & _BV(14));
-		send(data & _BV(13));
-		send(data & _BV(12));
-		send(data & _BV(11));
-		send(0);
-		ZERO_BIT_DELAY; send(0);
-		ZERO_BIT_DELAY; send(0);
-
-		send(data & _BV(10));
-		send(data & _BV(9));
-		send(data & _BV(8));
-		send(data & _BV(7));
-		send(data & _BV(6));
-		send(0);
-		ZERO_BIT_DELAY; send(0);
-		ZERO_BIT_DELAY; send(0);
-
-		send(data & _BV(5));
-		send(data & _BV(4));
-		send(data & _BV(3));
-		send(data & _BV(2));
-		send(data & _BV(1));
-		send(0);
-		ZERO_BIT_DELAY; send(0);
-		ZERO_BIT_DELAY; send(0);
 	}
 }
