@@ -62,40 +62,39 @@ x|x|x|x|x|x|x|x|0|0|0|0|0|1|1|1
 Here is simple program that imitating traffic light (green and blue channels are reversed due to my broken led strip, sorry). HEX, little-endian:
 
 ```
-02 00 41 1F  00 00 02 20  41 1F 00 00  00 00 00 08  41 1F 00 00  02 20 41 1F  00 00 00 00
-00 00 FF FF
+0200 411F 0000 0220 411F 0000 0000 0008 411F 0000 0220 411F 0000 0000 0000 FFFF
 ```
 
 Comments:
 
-`02 00` - faint green light for first LED.
+`0200` - faint green light for first LED.
 
-`41 1F` - 2 seconds delay (fast mode). Restart applying colors from first LED.
+`411F` - 2 seconds delay (fast mode). Restart applying colors from first LED.
 
-`00 00` - turn off first LED.
+`0000` - turn off first LED.
 
-`02 20` - faint yellow light for second LED.
+`0220` - faint yellow light for second LED.
 
-`41 1F` - 2 seconds delay (fast mode). Restart applying colors from first LED.
+`411F` - 2 seconds delay (fast mode). Restart applying colors from first LED.
 
-`00 00` - turn off first LED.
+`0000` - turn off first LED.
 
-`00 00` - turn off second LED.
+`0000` - turn off second LED.
 
-`00 08` - faint red light for third LED.
+`0008` - faint red light for third LED.
 
-`41 1F` - 2 seconds delay (fast mode). Restart applying colors from first LED.
+`411F` - 2 seconds delay (fast mode). Restart applying colors from first LED.
 
-`00 00` - turn off first LED.
+`0000` - turn off first LED.
 
-`02 20` - faint yellow light for second LED.
+`0220` - faint yellow light for second LED.
 
-`00 08` - faint red light for third LED.
+`0008` - faint red light for third LED.
 
-`00 00` - turn off first LED.
+`0000` - turn off first LED.
 
-`00 00` - turn off second LED.
+`0000` - turn off second LED.
 
-`00 00` - turn off third LED.
+`0000` - turn off third LED.
 
-`FF FF` - program end, restart.
+`FFFF` - program end, restart.
