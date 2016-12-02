@@ -7,17 +7,14 @@
 
 ## Supported MCUs
 
-* Atmel AVR ATtiny13
-* Atmel AVR ATtiny25
-* Atmel AVR ATtiny45
-* Atmel AVR ATtiny85
+* Atmel AVR ATtiny25/45/85
 
 ## Operation modes
 
-Following modes supported (firmware recompile is not needed):
+Following modes supported:
 
-* WS2811 Slow Mode (400 kbps) (set MCU frequency to 8 MHz).
-* WS2811 Fast Mode (800 kbps) (set MCU frequency to 16 MHz).
+* WS2811 Slow Mode (400 kbps): set FUSES to 8 MHz and `F_CPU` to `8000000`.
+* WS2811 Fast Mode (800 kbps): set FUSES to 16 MHz and `F_CPU` to `16000000`.
 
 ## Commands format
 
