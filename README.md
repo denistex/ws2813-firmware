@@ -13,8 +13,14 @@
 
 Following modes supported:
 
-* WS2811 Slow Mode (400 kbps): set FUSES to 8 MHz and `F_CPU` to `8000000`.
-* WS2811 Fast Mode (800 kbps): set FUSES to 16 MHz and `F_CPU` to `16000000`.
+- WS2811 Slow Mode (400 kbps): set FUSES to 8 MHz and `F_CPU` to `8000000`.
+- WS2811 Fast Mode (800 kbps): set FUSES to 16 MHz and `F_CPU` to `16000000` (**E**: FF, **H**: DF, **L**: F1).
+
+## Pinout (used ports)
+
+Data channel of the strip should be connected to port B1.
+
+Control LED could be connected to port B3.
 
 ## Commands format
 
