@@ -46,9 +46,9 @@ inline void send (const uint16_t value) {
 			"sbi %0, 1\n\t"
 			"nop\n\t"
 			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
 			"cbi %0, 1\n\t"
-			"nop\n\t"
-			"nop\n\t"
 			"nop\n\t"
 			"nop\n\t"
 			"nop\n\t"
@@ -70,9 +70,10 @@ inline void send (const uint16_t value) {
 			"nop\n\t"
 			"nop\n\t"
 			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
+			"nop\n\t"
 			"cbi %0, 1\n\t"
-			"nop\n\t"
-			"nop\n\t"
 			"nop\n\t"
 			"nop\n\t"
 			"nop\n\t"
@@ -120,7 +121,7 @@ int main (void) {
 			}
 
 			ledon();
-			_delay_us(100); // commit delay
+			_delay_us(600); // commit delay
 			ledoff();
 		}
 
