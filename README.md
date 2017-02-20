@@ -24,7 +24,7 @@ The firmware fetches commands from EEPROM. Each command is a word (16 bits, big-
 
 ### RESTART command
 
-This command must be the last one in the program. When it is reached the MCU will restart the program.
+This command must be the last one in the program. When it is reached the MCU restarts the program.
 
 ```
 1|1|1|1|1|1|1|1|1|1|1|1|1|1|1|1 (0xFFFF)
