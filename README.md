@@ -1,26 +1,22 @@
-# WS281x CONTROLLER FIRMWARE
-
-## Supported drivers
-
-* WS2811
-* ~~WS2813~~ (*coming soon*)
+# WS2813 CONTROLLER FIRMWARE
 
 ## Supported MCUs
 
 * Atmel AVR ATtiny25/45/85
 
-## Operation modes
+## Fuse bits
 
-Following modes supported:
+Ext | High | Low
+--|--|--
+FF | DF | F1
 
-- WS2811 Slow Mode (400 kbps): set FUSES to 8 MHz and `F_CPU` to `8000000`.
-- WS2811 Fast Mode (800 kbps): set FUSES to 16 MHz and `F_CPU` to `16000000` (**E**: FF, **H**: DF, **L**: F1).
+**NOTE:** these values will set MCU speed to 16MHz, but `F_CPU` constant must be set to `8000000`. This configuration supports working in "slow" mode (400 kbps). To use it just set MCU speed to 8MHz.
 
-## Pinout (used ports)
+## Ports
 
-Data channel of the strip should be connected to port B1.
-
-Control LED could be connected to port B3.
+Data channel | Control LED
+--|--
+B1 | B3
 
 ## Commands format
 
@@ -41,6 +37,7 @@ Color value, 5 bits per channel, very low bit is `0`. Each color applies to next
 ```
 R|R|R|R|R|G|G|G|G|G|B|B|B|B|B|0
 ```
+**NOTE:** the channels could be mixed in any ways (GRB, RBG, etc.), so check it for each device.
 
 ### DELAY command
 
