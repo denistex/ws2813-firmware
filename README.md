@@ -59,21 +59,21 @@ x|x|x|x|x|x|x|x|0|0|0|0|0|1|1|1
 
 ## Program example
 
-Here is simple program that imitating traffic light (green and blue channels are reversed due to my broken led strip, sorry). HEX, little-endian:
+Here is simple program that imitating traffic light (red and green channels are reversed due to my broken led strip, sorry). HEX, little-endian:
 
 ```
-0200 411F 0000 0220 411F 0000 0000 0008 411F 0000 0220 411F 0000 0000 0000 FFFF
+0008 411F 0000 8008 411F 0000 0000 4000 411F 0000 8008 411F 0000 0000 0000 FFFF
 ```
 
 Comments:
 
-`0200` - faint green light for first LED.
+`0008` - faint green light for first LED.
 
 `411F` - 2 seconds delay (fast mode). Restart applying colors from first LED.
 
 `0000` - turn off first LED.
 
-`0220` - faint yellow light for second LED.
+`8008` - faint yellow light for second LED.
 
 `411F` - 2 seconds delay (fast mode). Restart applying colors from first LED.
 
@@ -81,13 +81,13 @@ Comments:
 
 `0000` - turn off second LED.
 
-`0008` - faint red light for third LED.
+`4000` - faint red light for third LED.
 
 `411F` - 2 seconds delay (fast mode). Restart applying colors from first LED.
 
 `0000` - turn off first LED.
 
-`0220` - faint yellow light for second LED.
+`8008` - faint yellow light for second LED.
 
 `0008` - faint red light for third LED.
 
