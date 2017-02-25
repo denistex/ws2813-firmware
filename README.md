@@ -37,7 +37,7 @@ Color value, 5 bits per channel, very low bit is `0`. Each color applies to next
 ```
 R|R|R|R|R|G|G|G|G|G|B|B|B|B|B|0
 ```
-**NOTE:** the channels could be mixed in any ways (GRB, RBG, etc.), so check it for each device.
+**NOTE:** the channels can be mixed in any ways (GRB, RBG, etc.), so check it for each device.
 
 ### DELAY command
 
